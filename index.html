@@ -90,7 +90,19 @@ button { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 52px; gap: 16px; }
-.brand { font-weight: 650; font-size: 19px; letter-spacing: -0.02em; text-decoration: none; }
+.brand {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--fg);
+  font-family: inherit; font-weight: 650; font-size: 19px; letter-spacing: -0.02em; text-decoration: none;
+}
+.caret {
+  display: none; width: 8px; height: 8px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform 0.2s ease;
+}
+.brand[aria-expanded="true"] .caret { transform: rotate(-135deg) translate(-2px, -2px); }
+.nav-menu { display: none; }
+section, #top { scroll-margin-top: 56px; }
 .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
 .nav-links a { text-decoration: none; color: var(--muted); }
 .nav-links a:hover { color: var(--fg); }
@@ -101,7 +113,25 @@ button { font: inherit; color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .cart-pill:hover { color: var(--on-accent) !important; filter: brightness(1.06); }
-@media (max-width: 560px) { .nav-links .hide-sm { display: none; } }
+@media (max-width: 560px) {
+  .nav-links .hide-sm { display: none; }
+  .caret { display: inline-block; }
+  .nav-menu:not([hidden]) {
+    display: flex; flex-direction: column;
+    position: absolute; left: 0; right: 0; top: 100%;
+    background: var(--nav-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--line);
+    padding: 4px 20px 14px;
+  }
+  .nav-menu a {
+    text-decoration: none; font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+    padding: 14px 0; border-top: 1px solid var(--line);
+  }
+  .nav-menu a:first-child { border-top: 0; }
+  .nav-menu a:hover { color: var(--accent); }
+}
 
 /* Hero */
 .hero { text-align: center; padding-block: 72px 40px; }
@@ -251,7 +281,7 @@ footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var
 
 <header class="nav">
   <div class="wrap">
-    <a class="brand" href="#top">EmpanasLia</a>
+    <button class="brand" id="menuBtn" type="button" aria-expanded="false" aria-controls="navMenu">EmpanasLia<span class="caret" aria-hidden="true"></span></button>
     <nav class="nav-links" aria-label="Principal">
       <a class="hide-sm" href="#carta">Carta</a>
       <a class="hide-sm" href="#como">Cómo pedir</a>
@@ -259,6 +289,11 @@ footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var
       <a class="cart-pill" href="#pedido" id="navCart" aria-label="Ir al pedido">Pedido · <span id="navCount">0</span></a>
     </nav>
   </div>
+  <nav class="nav-menu" id="navMenu" aria-label="Secciones" hidden>
+    <a href="#carta">Carta</a>
+    <a href="#como">Cómo pedir</a>
+    <a href="#mayorista">Mayoristas</a>
+  </nav>
 </header>
 
 <main id="top">
@@ -582,6 +617,24 @@ footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var
     if (this.getAttribute("aria-disabled") === "true") e.preventDefault();
   });
   renderBulk();
+
+  // Menú del celular: el nombre del negocio despliega las secciones
+  var menuBtn = $("menuBtn"), navMenu = $("navMenu");
+  var mobileMQ = window.matchMedia("(max-width: 560px)");
+  function closeMenu() {
+    navMenu.hidden = true;
+    menuBtn.setAttribute("aria-expanded", "false");
+  }
+  menuBtn.addEventListener("click", function () {
+    if (!mobileMQ.matches) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    var opening = navMenu.hidden;
+    navMenu.hidden = !opening;
+    menuBtn.setAttribute("aria-expanded", opening ? "true" : "false");
+  });
+  navMenu.addEventListener("click", function (e) { if (e.target.closest("a")) closeMenu(); });
+  document.addEventListener("click", function (e) { if (!e.target.closest(".nav")) closeMenu(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+  if (mobileMQ.addEventListener) mobileMQ.addEventListener("change", closeMenu);
 
   // Estado de ejemplo para que el boceto se vea con un pedido armado
   qty.carne = 4; qty.humita = 3; qty.jyq = 2; qty.azul = 3;
