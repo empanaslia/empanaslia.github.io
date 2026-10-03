@@ -212,6 +212,15 @@ section { padding-block: 72px; }
 .hint { color: var(--muted); font-size: 14px; margin-top: 12px; min-height: 1.4em; }
 .summary .btn { width: 100%; margin-top: 18px; }
 .note { color: var(--muted); font-size: 13px; margin-top: 14px; }
+.bulk h3 { font-size: 1.6rem; font-weight: 700; margin-bottom: 18px; }
+.ticks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.ticks li { position: relative; padding-left: 28px; }
+.ticks li::before {
+  content: ""; position: absolute; left: 0; top: 0.5em; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--accent);
+}
+#bulkForm .btn { width: 100%; margin-top: 4px; }
+#mayorista .note { font-size: 14px; margin-top: 20px; }
 
 /* Pie */
 footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
@@ -246,6 +255,7 @@ footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var
     <nav class="nav-links" aria-label="Principal">
       <a class="hide-sm" href="#carta">Carta</a>
       <a class="hide-sm" href="#como">Cómo pedir</a>
+      <a class="hide-sm" href="#mayorista">Mayoristas</a>
       <a class="cart-pill" href="#pedido" id="navCart" aria-label="Ir al pedido">Pedido · <span id="navCount">0</span></a>
     </nav>
   </div>
@@ -342,6 +352,50 @@ footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var
           <p class="hint" id="hint"></p>
           <p class="note">Si elegís transferencia, te pasamos el alias por WhatsApp. El pedido queda confirmado cuando te respondemos.</p>
         </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="mayorista">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>¿Querés vender empanadas?</h2>
+        <p>Armá tu propio emprendimiento con nuestras empanadas crudas por mayor.</p>
+      </div>
+      <div class="order">
+        <div class="bulk">
+          <h3>Empanadas crudas por mayor</h3>
+          <ul class="ticks">
+            <li>Crudas y listas para hornear o freír en tu casa o local.</li>
+            <li>Las mismas variedades de la carta, por docenas o por bandejas.</li>
+            <li>Precio por cantidad: cuanto más pedís, mejor el valor.</li>
+            <li>Retiro o entrega en Tunuyán y alrededores.</li>
+          </ul>
+          <p class="note">Mínimo de compra, precios y días de entrega: te los pasamos por WhatsApp.</p>
+        </div>
+        <form class="panel" id="bulkForm" novalidate>
+          <h3>Contanos qué necesitás</h3>
+          <div class="field">
+            <label for="bName">Nombre</label>
+            <input type="text" id="bName" autocomplete="name" placeholder="Cómo te llamás">
+          </div>
+          <div class="field">
+            <label for="bQty">Cantidad aproximada</label>
+            <select id="bQty">
+              <option>Menos de 10 docenas</option>
+              <option>10 a 20 docenas</option>
+              <option>20 a 50 docenas</option>
+              <option>Más de 50 docenas</option>
+              <option>Todavía no sé</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="bNote">Consulta</label>
+            <textarea id="bNote" placeholder="Variedades que te interesan, cada cuánto comprarías, etc."></textarea>
+          </div>
+          <a class="btn" id="bSend" href="#mayorista" target="_blank" rel="noopener" aria-disabled="true">Consultar por WhatsApp</a>
+          <p class="hint" id="bHint"></p>
+        </form>
       </div>
     </div>
   </section>
@@ -499,6 +553,35 @@ footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var
   $("send").addEventListener("click", function (e) {
     if (this.getAttribute("aria-disabled") === "true") e.preventDefault();
   });
+
+  // Consulta mayorista (empanadas crudas)
+  function renderBulk() {
+    var n = $("bName").value.trim();
+    var send = $("bSend");
+    if (!n) {
+      send.setAttribute("aria-disabled", "true");
+      send.setAttribute("href", "#mayorista");
+      $("bHint").textContent = "Para enviar: escribí tu nombre.";
+      return;
+    }
+    var note = $("bNote").value.trim();
+    var msg = "Hola EmpanasLia! Quiero consultar por empanadas crudas por mayor para mi emprendimiento.\n" +
+      "Nombre: " + n + "\n" +
+      "Cantidad aproximada: " + $("bQty").value +
+      (note ? "\nConsulta: " + note : "");
+    send.setAttribute("aria-disabled", "false");
+    send.setAttribute("href", "https://wa.me/" + WA + "?text=" + encodeURIComponent(msg));
+    $("bHint").textContent = "Se abre WhatsApp con tu consulta lista para enviar.";
+  }
+  ["bName", "bQty", "bNote"].forEach(function (id) {
+    $(id).addEventListener("input", renderBulk);
+    $(id).addEventListener("change", renderBulk);
+  });
+  $("bulkForm").addEventListener("submit", function (e) { e.preventDefault(); });
+  $("bSend").addEventListener("click", function (e) {
+    if (this.getAttribute("aria-disabled") === "true") e.preventDefault();
+  });
+  renderBulk();
 
   // Estado de ejemplo para que el boceto se vea con un pedido armado
   qty.carne = 4; qty.humita = 3; qty.jyq = 2; qty.azul = 3;
